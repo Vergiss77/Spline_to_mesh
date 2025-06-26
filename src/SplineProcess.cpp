@@ -37,7 +37,7 @@ void BasisSplineProcess::SaveSplinetoFile(const std::string &filename)
     gsInfo << "Saving done.\n";
 }
 
-void BasisSplineProcess::BuildSurfacetoMesh(gismo::gsMesh<> &mesh, index_t numSample)
+void BasisSplineProcess::BuildSurfacetoMesh(gismo::gsMesh<> &mesh, std::map<gismo::gsMesh<>::FaceHandle, index_t> &faceIndexMap, index_t numSample)
 {
     if(!_spline_ptr) {
         gsInfo << "No spline loaded to build mesh.\n";
@@ -47,6 +47,7 @@ void BasisSplineProcess::BuildSurfacetoMesh(gismo::gsMesh<> &mesh, index_t numSa
         InitializeMeshStrategy();
     }
     if(_meshStrategyPtr->BuildMesh(mesh, _spline_ptr->support(), numSample)){
+        SetMeshColorIndexMap(mesh, _spline_ptr->support(), faceIndexMap);
         _spline_ptr->evaluateMesh(mesh);
     } else {
         gsInfo << "Failed to build mesh.\n";
@@ -63,8 +64,7 @@ void BasisSplineProcess::BuildSurfacetoFileOFF(const std::string &filename, inde
     }
     gismo::gsMesh<> mesh;
     std::map<gismo::gsMesh<>::FaceHandle, index_t> faceIndexMap;
-    BuildSurfacetoMesh(mesh, num);
-    SetMeshColorIndexMap(mesh, _spline_ptr->support(), faceIndexMap);
+    BuildSurfacetoMesh(mesh, faceIndexMap, num);
 
     std::fstream fileOut(filename, std::ios::out);
     fileOut << "OFF\n";
@@ -93,18 +93,25 @@ void VolumeSplineProcess::SetMeshColorIndexMap(const gismo::gsMesh<> &mesh, cons
                                                std::map<gismo::gsMesh<>::FaceHandle, index_t> &faceIndexMap)
 {
     for(const auto &face : mesh.faces()) {
-        auto v = face->vertices.front();
-        if(v->x() == support(0, 0)){
+        gismo::gsVector<double> point = gismo::gsVector<double>::Zero(3);
+        // Calculate the center of the face by averaging the vertices
+        for(const auto &v : face->vertices) {
+            point.x() += v->x();
+            point.y() += v->y();
+            point.z() += v->z();
+        }
+        point /= face->vertices.size();
+        if(point.x() == support(0, 0)){
             faceIndexMap[face] = 0; // Back face
-        } else if(v->x() == support(0, 1)) {
+        } else if(point.x() == support(0, 1)) {
             faceIndexMap[face] = 5; // Front face
-        } else if(v->y() == support(1, 0)) {
+        } else if(point.y() == support(1, 0)) {
             faceIndexMap[face] = 1; // Left face
-        } else if(v->y() == support(1, 1)) {
+        } else if(point.y() == support(1, 1)) {
             faceIndexMap[face] = 4; // Right face
-        } else if(v->z() == support(2, 0)) {
+        } else if(point.z() == support(2, 0)) {
             faceIndexMap[face] = 2; // Bottom face
-        } else if(v->z() == support(2, 1)) {
+        } else if(point.z() == support(2, 1)) {
             faceIndexMap[face] = 3; // Top face
         }
     }

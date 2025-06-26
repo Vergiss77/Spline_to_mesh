@@ -43,7 +43,7 @@ public:
     int GetDimension() const { return _spline_ptr->parDim(); }
 
     virtual void InitializeMeshStrategy() {}
-    virtual void BuildSurfacetoMesh(gismo::gsMesh<> &mesh, index_t numSample = 64);
+    virtual void BuildSurfacetoMesh(gismo::gsMesh<> &mesh, std::map<gismo::gsMesh<>::FaceHandle, index_t> &faceIndexMap, index_t numSample = 64);
     virtual void SetMeshColorIndexMap(const gismo::gsMesh<> &mesh, const gismo::gsMatrix<> &support,
                                       std::map<gismo::gsMesh<>::FaceHandle, index_t> &faceIndexMap){};
     virtual void BuildSurfacetoFileOFF(const std::string &filename, index_t numSample = 64);
