@@ -55,17 +55,11 @@ void BasisSplineProcess::BuildSurfacetoMesh(gismo::gsMesh<> &mesh, std::map<gism
     }
 };
 
-void BasisSplineProcess::BuildSurfacetoFileOFF(const std::string &filename, index_t num)
+void BasisSplineProcess::SaveMeshtoFileOFF(const gismo::gsMesh<> &mesh,
+                                           const std::map<gismo::gsMesh<>::FaceHandle, index_t> &faceIndexMap,
+                                           const std::string &filename)
 {
-    gsInfo << "Building model to file...\n";
-    if(!_spline_ptr) {
-        gsInfo << "No spline loaded to build model.\n";
-        return;
-    }
-    gismo::gsMesh<> mesh;
-    std::map<gismo::gsMesh<>::FaceHandle, index_t> faceIndexMap;
-    BuildSurfacetoMesh(mesh, faceIndexMap, num);
-
+    gsInfo << "Saving mesh to file...\n";
     std::fstream fileOut(filename, std::ios::out);
     fileOut << "OFF\n";
     fileOut << mesh.numVertices() << " " << mesh.numFaces() << " 0\n";
@@ -79,12 +73,25 @@ void BasisSplineProcess::BuildSurfacetoFileOFF(const std::string &filename, inde
             fileOut << " " << v->getId();
         }
         if(_optionFlag & WITH_COLOR) {
-            index_t colorIndex = faceIndexMap[face];
+            index_t colorIndex = faceIndexMap.at(face);
             fileOut << " " << _colors[colorIndex][0] << " " << _colors[colorIndex][1] << " " << _colors[colorIndex][2];
         }
         fileOut << '\n';
     }
     fileOut.close();
+}
+
+void BasisSplineProcess::BuildSurfacetoFileOFF(const std::string &filename, index_t num)
+{
+    gsInfo << "Building model to file...\n";
+    if(!_spline_ptr) {
+        gsInfo << "No spline loaded to build model.\n";
+        return;
+    }
+    gismo::gsMesh<> mesh;
+    std::map<gismo::gsMesh<>::FaceHandle, index_t> faceIndexMap;
+    BuildSurfacetoMesh(mesh, faceIndexMap, num);
+    SaveMeshtoFileOFF(mesh, faceIndexMap, filename);
 
     gsInfo << "Building model done.\n";
 }
