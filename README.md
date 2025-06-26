@@ -1,6 +1,6 @@
 # Spline to mesh
 
-一个简单易用的工具，用于将[Gismo库](https://github.com/gismo/gismo)中的样条转换为 Surface Mesh.
+一个简单易用的工具，用于将[Gismo库](https://github.com/gismo/gismo)中的样条输出为 Surface Mesh.
 
 目前支持单个二维、三维样条的转换，输出为表面网格。
 
@@ -35,10 +35,11 @@ cmake --build build --target Spline_to_mesh --config Release
 - `-n`：后接每个方向网格数，默认为 64.
 - `--color`：标志位，表示输出网格时是否包含颜色信息，默认为 false.
 - `--invert`：标志位，表示是否反转网格法线，默认为 false.
+- `--square`：标志位，表示是否将网格转换为正方形网格，默认为 false.
 
 ## What's next
 
-- [ ] 使用 `gsMesh`，支持导出四边形网格
+- [x] 使用 `gsMesh`，支持导出四边形网格
 - [ ] 支持更多的网格类型
 - [ ] 支持一维样条转换为线网格
 - [ ] 支持多块样条转换
