@@ -14,6 +14,10 @@
     - [GCC](https://gcc.gnu.org/)
 ### Library
 - [Gismo](https://github.com/gismo/gismo)
+
+## Optional Library
+- [Assimp](https://github.com/assimp/assimp): 启用以支持更多网格导出格式
+
 ## How to compile
 ```shell
 cd /path/to/project
