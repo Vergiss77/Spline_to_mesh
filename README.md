@@ -36,11 +36,12 @@ cmake --build build --target Spline_to_mesh --config Release
 - `--color`：标志位，表示输出网格时是否包含颜色信息，默认为 false.
 - `--invert`：标志位，表示是否反转网格法线，默认为 false.
 - `--square`：标志位，表示是否将网格转换为正方形网格，默认为 false.
+- `--showFormat`: 标志位，表示是否显示支持的导出格式，默认为 false.
 
 ## What's next
 
 - [x] 使用 `gsMesh`，支持导出四边形网格
-- [ ] 支持更多的网格类型
+- [x] 支持更多的网格类型
 - [ ] 支持一维样条转换为线网格
 - [ ] 支持多块样条转换
 - [ ] 支持配置文件导入部分参数

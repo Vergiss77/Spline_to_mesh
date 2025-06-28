@@ -3,11 +3,12 @@
 
 int main(int argc, char *argv[])
 {
-    std::string outputfile("output.off"), inputfile("../models/cylinder.xml");
+    std::string outputfile("output.off"), inputfile("");
     index_t numSample = 64;
     bool withColor = false;
     bool invertNormal = false;
     bool squareMesh = false;
+    bool showFormat = false;
 
     gsCmdLine cmd("Give me a file (eg: .xml) with Spline and I will try to convert it to mesh!");
 
@@ -17,8 +18,15 @@ int main(int argc, char *argv[])
     cmd.addSwitch("color", "Use color for the model", withColor);
     cmd.addSwitch("invert", "Invert the color of the model", invertNormal);
     cmd.addSwitch("square", "Use square mesh instead of triangle mesh", squareMesh);
+    cmd.addSwitch("showFormat", "Show supported export formats", showFormat);
 
     try { cmd.getValues(argc,argv); } catch (int rv) { return rv; }
+
+    if (showFormat)
+    {
+        BasisSplineProcess basisSplineProcess;
+        basisSplineProcess.ShowExportFormatsSupported();
+    }
 
     if ( inputfile.empty() )
     {
@@ -47,7 +55,9 @@ int main(int argc, char *argv[])
     }
     gsInfo << "Spline dimension: " << splineProcessPtr->GetDimension() << "\n";
     splineProcessPtr->InitializeMeshStrategy();
-    splineProcessPtr->BuildSurfacetoFileOFF(outputfile, numSample);
+    if(!splineProcessPtr->BuildSurfacetoFile(outputfile, numSample)){
+        return EXIT_FAILURE;
+    }
 
     return EXIT_SUCCESS;
 }

@@ -55,45 +55,73 @@ void BasisSplineProcess::BuildSurfacetoMesh(gismo::gsMesh<> &mesh, std::map<gism
     }
 };
 
-void BasisSplineProcess::SaveMeshtoFileOFF(const gismo::gsMesh<> &mesh,
-                                           const std::map<gismo::gsMesh<>::FaceHandle, index_t> &faceIndexMap,
-                                           const std::string &filename)
+bool BasisSplineProcess::SaveMeshtoFile(const gismo::gsMesh<> &mesh,
+                                        const std::map<gismo::gsMesh<>::FaceHandle, index_t> &faceIndexMap,
+                                        const std::string &filename)
 {
-    gsInfo << "Saving mesh to file...\n";
-    std::fstream fileOut(filename, std::ios::out);
-    fileOut << "OFF\n";
-    fileOut << mesh.numVertices() << " " << mesh.numFaces() << " 0\n";
-    fileOut << std::setprecision(std::numeric_limits<long double>::digits10);
-    for(auto &vertex : mesh.vertices()) {
-        fileOut << vertex->x() << " " << vertex->y() << " " << vertex->z() << '\n';
+    std::string format = filename.substr(filename.find_last_of('.') + 1);
+    if(format == "off") {
+        _meshExporterPtr = std::make_unique<OffMeshExporter>(_optionFlag);
+    } else if (format == "obj") {
+        _meshExporterPtr = std::make_unique<ObjMeshExporter>(_optionFlag);
+    } else if (format == "ply") {
+        _meshExporterPtr = std::make_unique<PlyMeshExporter>(_optionFlag);
+    } else {
+        #ifdef ASSIMP_USE
+        _meshExporterPtr = std::make_unique<AssimpMeshExporter>(_optionFlag);
+        #else
+        gsInfo << "Unsupported mesh format: " << format << ". Please use .off, .obj, or .ply.\n";
+        return false;
+        #endif
     }
-    for(auto &face : mesh.faces()) {
-        fileOut << face->vertices.size();
-        for(auto &v : face->vertices) {
-            fileOut << " " << v->getId();
-        }
-        if(_optionFlag & WITH_COLOR) {
-            index_t colorIndex = faceIndexMap.at(face);
-            fileOut << " " << _colors[colorIndex][0] << " " << _colors[colorIndex][1] << " " << _colors[colorIndex][2];
-        }
-        fileOut << '\n';
+    if(_meshExporterPtr->ExportMesh(mesh, faceIndexMap, format, filename)){
+        gsInfo << "Mesh saved to file: " << filename << "\n";
+        return true;
+    } else {
+        gsInfo << "Failed to save mesh to file " << filename << " with format " << format << "\n";
+        return false;
     }
-    fileOut.close();
 }
 
-void BasisSplineProcess::BuildSurfacetoFileOFF(const std::string &filename, index_t num)
+bool BasisSplineProcess::BuildSurfacetoFile(const std::string &filename, index_t num)
 {
     gsInfo << "Building model to file...\n";
     if(!_spline_ptr) {
         gsInfo << "No spline loaded to build model.\n";
-        return;
+        return false;
     }
     gismo::gsMesh<> mesh;
     std::map<gismo::gsMesh<>::FaceHandle, index_t> faceIndexMap;
     BuildSurfacetoMesh(mesh, faceIndexMap, num);
-    SaveMeshtoFileOFF(mesh, faceIndexMap, filename);
+    if(!SaveMeshtoFile(mesh, faceIndexMap, filename)){
+        gsInfo << "Failed to build model to file: " << filename << "\n";
+        return false;
+    }
 
     gsInfo << "Building model done.\n";
+    return true;
+}
+
+void BasisSplineProcess::ShowExportFormatsSupported() const
+{
+    gsInfo << "Supported export formats:\n";
+    gsInfo << "1. OFF (.off)\n";
+    gsInfo << "2. OBJ (.obj)\n";
+    gsInfo << "3. PLY (.ply)\n";
+    
+    #ifdef ASSIMP_USE
+    Assimp::Exporter exporter;
+    size_t n = exporter.GetExportFormatCount();
+    gsInfo << "4. Assimp supported formats (" << n << " formats):\n";
+    for(size_t i = 0; i < n; ++i) {
+        const aiExportFormatDesc* desc = exporter.GetExportFormatDescription(i);
+        gsInfo << "   " << desc->id << " : " << desc->description << " (." << desc->fileExtension << ")" << std::endl;
+    }
+    #else
+    gsInfo << "4. Assimp is not enabled. Please compile with ASSIMP_USE defined to use Assimp exporter.\n";
+    #endif
+    gsInfo << '\n';
+
 }
 
 void VolumeSplineProcess::SetMeshColorIndexMap(const gismo::gsMesh<> &mesh, const gismo::gsMatrix<> &support,

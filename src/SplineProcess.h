@@ -2,6 +2,7 @@
 
 #include <gismo.h>
 #include "MeshStrategy.h"
+#include "MeshExporter.h"
 
 #define Eigen gsEigen
 
@@ -10,6 +11,7 @@ class BasisSplineProcess
 protected:
     std::unique_ptr<gismo::gsGeometry<>> _spline_ptr;
     std::unique_ptr<BasisMeshStrategy> _meshStrategyPtr;
+    std::unique_ptr<BasisMeshExporter> _meshExporterPtr = nullptr;
 
     OptionFlag _optionFlag = static_cast<OptionFlag>(0);
     MeshType _meshType = TRIANGLE_MESH;
@@ -47,10 +49,12 @@ public:
     virtual void SetMeshColorIndexMap(const gismo::gsMesh<> &mesh, const gismo::gsMatrix<> &support,
                                       std::map<gismo::gsMesh<>::FaceHandle, index_t> &faceIndexMap){};
 
-    virtual void SaveMeshtoFileOFF(const gismo::gsMesh<> &mesh,
-                                   const std::map<gismo::gsMesh<>::FaceHandle, index_t> &faceIndexMap,
-                                   const std::string &filename);
-    virtual void BuildSurfacetoFileOFF(const std::string &filename, index_t numSample = 64);
+    virtual bool SaveMeshtoFile(const gismo::gsMesh<> &mesh,
+                                const std::map<gismo::gsMesh<>::FaceHandle, index_t> &faceIndexMap,
+                                const std::string &filename);
+    virtual bool BuildSurfacetoFile(const std::string &filename, index_t numSample = 64);
+
+    void ShowExportFormatsSupported() const;
 };
 
 class VolumeSplineProcess : public BasisSplineProcess
